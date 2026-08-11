@@ -18,7 +18,23 @@ optional<vector<Shape>> ConcatObj::inferShape(const TensorVec &inputs) {
     // REF: https://onnx.ai/onnx/operators/onnx__Concat.html#concat-13
     // =================================== 作业 ===================================
 
-    return {{dims}};
+    Shape outputDims = inputs[0]->getDims();
+    IT_ASSERT(dim >= 0 && dim < (int)rank);
+
+    for (size_t i = 1; i < inputs.size(); i++) {
+        const auto &input = inputs[i];
+        IT_ASSERT(input->getRank() == (size_t)rank);
+        IT_ASSERT(input->getDType() == inputs[0]->getDType());
+        Shape inputDims = input->getDims();
+        for (int axis = 0; axis < (int)rank; ++axis) {
+            if (axis == dim)
+                outputDims[axis] += inputDims[axis];
+            else
+                IT_ASSERT(outputDims[axis] == inputDims[axis]);
+        }
+    }
+
+    return {{outputDims}};
 }
 
 std::string ConcatObj::toString() const {

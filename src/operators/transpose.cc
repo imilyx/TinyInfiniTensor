@@ -9,6 +9,7 @@ namespace infini
         auto rank = input->getRank();
         if (permute.empty())
         {
+            transposePermute.resize(rank);
             for (size_t i = 0; i < rank; ++i)
             {
                 transposePermute[i] = i;
@@ -34,7 +35,16 @@ namespace infini
         // REF: https://onnx.ai/onnx/operators/onnx__Transpose.html#transpose-21
         // =================================== 作业 ===================================
 
-        return std::nullopt;
+        IT_ASSERT(static_cast<int>(transposePermute.size()) == rank);
+        vector<bool> used(rank, false);
+        for (int i = 0; i < rank; ++i) {
+            int axis = transposePermute[i];
+            IT_ASSERT(axis >= 0 && axis < rank);
+            IT_ASSERT(!used[axis]);
+            used[axis] = true;
+            output_dim[i] = input_dim[axis];
+        }
+        return {{output_dim}};
     }
 
     std::string TransposeObj::toString() const
